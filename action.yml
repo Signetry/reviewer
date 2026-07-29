@@ -1,0 +1,188 @@
+name: "Umbra Reviewer"
+description: "Advisory PR review: surfaces architecture + security issues, cross-verifies against deterministic gates, and recommends safe / needs-human / block. Never merges on its own judgement."
+author: "Binay Dalai"
+branding:
+  icon: "eye"
+  color: "purple"
+
+inputs:
+  required-check:
+    description: "Name of the repo's required status check to cross-verify (e.g. 'Umbra Admission'). Blank skips the check lookup."
+    required: false
+    default: ""
+  protected-paths:
+    description: "Comma-separated globs of protected/ownership paths that escalate to a designated reviewer."
+    required: false
+    default: ""
+  fail-on-block:
+    description: "Fail the check (non-zero) on a BLOCK verdict."
+    required: false
+    default: "true"
+  fail-on-needs-human:
+    description: "Also fail on needs-human / third-party verdicts (stricter gate)."
+    required: false
+    default: "false"
+  auto-merge:
+    description: "Opt in to auto-merge on a SAFE verdict. OFF by default. Even when true, auto-merge only fires when the deterministic gates are green — never on the reviewer's judgement alone."
+    required: false
+    default: "false"
+  umbra-reviewer-version:
+    description: "Version of umbra-reviewer to install from PyPI. Blank installs the latest."
+    required: false
+    default: ""
+  python-version:
+    required: false
+    default: "3.12"
+
+outputs:
+  verdict:
+    description: "safe | needs_human | third_party | block"
+    value: ${{ steps.review.outputs.verdict }}
+  worst-severity:
+    description: "The worst finding severity."
+    value: ${{ steps.review.outputs['worst-severity'] }}
+  auto-merge-eligible:
+    description: "true only if a SAFE verdict met the deterministic auto-merge bar."
+    value: ${{ steps.review.outputs['auto-merge-eligible'] }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install umbra-reviewer
+      shell: bash
+      env:
+        IN_VERSION: ${{ inputs.umbra-reviewer-version }}
+      run: |
+        set -euo pipefail
+        if [ -n "${IN_VERSION:-}" ]; then
+          case "$IN_VERSION" in *[!0-9.a-zA-Z_-]*) echo "::error::bad version"; exit 1 ;; esac
+          pip install "umbra-reviewer==$IN_VERSION"
+        else
+          pip install umbra-reviewer
+        fi
+
+    - name: Compute the PR diff
+      if: ${{ github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        set -euo pipefail
+        git fetch --no-tags origin "$BASE_SHA" "$HEAD_SHA" 2>/dev/null || {
+          echo "::error::Cannot fetch base/head. Set 'fetch-depth: 0' on actions/checkout."; exit 1; }
+        OUT="${RUNNER_TEMP:-/tmp}/umbra-reviewer"
+        mkdir -p "$OUT"
+        git diff "$BASE_SHA" "$HEAD_SHA" > "$OUT/pr.diff"
+        echo "OUT=$OUT" >> "$GITHUB_ENV"
+
+    - name: Look up the required-check status
+      id: check
+      if: ${{ github.event_name == 'pull_request' && inputs.required-check != '' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        REQUIRED: ${{ inputs.required-check }}
+      run: |
+        set -euo pipefail
+        # Read the combined check-run conclusion for the required check by name.
+        STATUS=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/check-runs" \
+          --jq --arg name "$REQUIRED" '
+            (.check_runs // []) | map(select(.name == $name)) | .[0] // {} |
+            (if .status == "completed" then (.conclusion // "unknown") else "pending" end)' 2>/dev/null || echo "unknown")
+        case "$STATUS" in
+          success) MAPPED=success ;;
+          failure|cancelled|timed_out|action_required) MAPPED=failure ;;
+          pending|queued|in_progress) MAPPED=pending ;;
+          "" |null|"{}") MAPPED=missing ;;
+          *) MAPPED=unknown ;;
+        esac
+        echo "status=$MAPPED" >> "$GITHUB_OUTPUT"
+
+    - name: Run the review
+      id: review
+      if: ${{ github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        IN_PROTECTED: ${{ inputs.protected-paths }}
+        IN_REQUIRED_STATUS: ${{ steps.check.outputs.status || 'unknown' }}
+        IN_AUTO_MERGE: ${{ inputs.auto-merge == 'true' && '--auto-merge' || '' }}
+        IN_FAIL_HUMAN: ${{ inputs.fail-on-needs-human == 'true' && '--fail-on-needs-human' || '' }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        set -uo pipefail
+        OUT="${OUT:-${RUNNER_TEMP:-/tmp}/umbra-reviewer}"
+        mkdir -p "$OUT"
+        # Fail-closed: assume block until the reviewer actually completes and
+        # overwrites RC with its own exit code. A crash here leaves RC=1.
+        echo "RC=1" >> "$GITHUB_ENV"
+        umbra-reviewer review \
+          --diff "$OUT/pr.diff" \
+          --repo "$GITHUB_REPOSITORY" \
+          --pr "$PR_NUMBER" \
+          --required-check "$IN_REQUIRED_STATUS" \
+          --protected "$IN_PROTECTED" \
+          --comment-out "$OUT/comment.md" \
+          --json-out "$OUT/review.json" \
+          $IN_AUTO_MERGE $IN_FAIL_HUMAN
+        RC=$?
+        echo "RC=$RC" >> "$GITHUB_ENV"
+        exit 0   # don't fail this step; the dedicated enforce step gates on RC
+
+    - name: Post / update the PR comment
+      if: ${{ always() && github.event_name == 'pull_request' }}
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          const out = process.env.OUT || '';
+          let body = 'Umbra Reviewer: no review was produced.';
+          try { body = fs.readFileSync(path.join(out, 'comment.md'), 'utf8'); } catch (e) {}
+          const marker = '<!-- umbra-reviewer -->';
+          body = marker + '\n' + body;
+          const { owner, repo } = context.repo;
+          const issue_number = context.issue.number;
+          const comments = await github.rest.issues.listComments({ owner, repo, issue_number });
+          const mine = comments.data.find(c => c.body && c.body.includes(marker));
+          if (mine) {
+            await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+          } else {
+            await github.rest.issues.createComment({ owner, repo, issue_number, body });
+          }
+
+    - name: Auto-merge (opt-in; only on a SAFE verdict with green deterministic gates)
+      if: ${{ github.event_name == 'pull_request' && inputs.auto-merge == 'true' && steps.review.outputs['auto-merge-eligible'] == 'true' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        set -euo pipefail
+        echo "Deterministic gates green + safe verdict → enabling GitHub auto-merge (branch protection still applies)."
+        # Uses GitHub's own auto-merge: the PR only merges when ALL branch-protection
+        # required checks pass. This is a request to GitHub, not a force-merge — the
+        # platform, not this bot, performs the merge, and only if the repo's rules allow.
+        gh pr merge "$PR_NUMBER" --auto --squash || echo "::warning::auto-merge could not be enabled (branch protection / permissions)."
+
+    - name: Enforce the verdict gate
+      if: ${{ always() && github.event_name == 'pull_request' && inputs.fail-on-block == 'true' }}
+      shell: bash
+      env:
+        REVIEW_OUTCOME: ${{ steps.review.outcome }}
+        VERDICT: ${{ steps.review.outputs.verdict }}
+      run: |
+        # Fail-closed: if the review step didn't succeed, or RC is non-zero, fail.
+        if [ "${REVIEW_OUTCOME}" != "success" ]; then
+          echo "::error::Umbra Reviewer did not run to completion (step outcome: ${REVIEW_OUTCOME}). Failing closed."
+          exit 1
+        fi
+        if [ "${RC:-1}" != "0" ]; then
+          echo "::error::Umbra Reviewer verdict is '${VERDICT:-unknown}'. See the PR comment."
+          exit 1
+        fi
