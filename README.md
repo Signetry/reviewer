@@ -10,7 +10,8 @@
 
 Part of the [Umbra platform](https://github.com/bkd-dotcom/umbra-umbrella).
 
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Source-available](https://img.shields.io/badge/source-available-informational.svg)](CLA.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome%20(CLA)-brightgreen.svg)](https://github.com/bkd-dotcom/umbra-umbrella/issues/10)
 
 </div>
 
@@ -73,6 +74,10 @@ git diff origin/main...HEAD | umbra-reviewer review --repo owner/name --pr 12 \
 
 - [`umbra-action`](https://github.com/bkd-dotcom/umbra-action) is the **hard gate** (the required check + signed receipt). `umbra-reviewer` is the **advisory layer** on top; point `required-check` at the Umbra Admission check to cross-verify.
 - [`umbra-core`](https://github.com/bkd-dotcom/umbra-core) is the governance kernel.
+
+## Contributing
+
+**Source-available, PRs welcome** (not open source; All Rights Reserved). Contribute under the [CLA](CLA.md) — you're **credited** ([CONTRIBUTORS.md](CONTRIBUTORS.md)) but gain no ownership or right to use/sell it. Good first task: add a deterministic PR-diff check (`umbra_reviewer/checks.py`) with a test. Start at the [good-first-issues board](https://github.com/bkd-dotcom/umbra-umbrella/issues/10) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
