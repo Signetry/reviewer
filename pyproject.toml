@@ -4,13 +4,12 @@ version = "0.1.0"
 description = "An advisory PR reviewer that surfaces architecture + security issues, cross-verifies them against deterministic gates, and recommends whether a change is safe to merge — never merging on its own judgement."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { text = "Proprietary — All Rights Reserved" }
 authors = [{ name = "Binay Dalai" }]
 keywords = ["code-review", "security", "pull-request", "github-actions", "supply-chain", "ai-agents"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
