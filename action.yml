@@ -65,7 +65,7 @@ runs:
           case "$IN_VERSION" in *[!0-9.a-zA-Z_-]*) echo "::error::bad version"; exit 1 ;; esac
           pip install "umbra-reviewer @ ${REPO}@v${IN_VERSION}"
         else
-          pip install "umbra-reviewer @ ${REPO}@v0.1.0"
+          pip install "umbra-reviewer @ ${REPO}@v0.1.1"
         fi
 
     - name: Compute the PR diff
