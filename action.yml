@@ -27,7 +27,7 @@ inputs:
     required: false
     default: "false"
   umbra-reviewer-version:
-    description: "Version of umbra-reviewer to install from PyPI. Blank installs the latest."
+    description: "Version tag of umbra-reviewer to install from source (e.g. '0.1.0'). Blank installs the pinned default. umbra-reviewer is source-available (All Rights Reserved) and installed from its source repo, not PyPI."
     required: false
     default: ""
   python-version:
@@ -58,11 +58,14 @@ runs:
         IN_VERSION: ${{ inputs.umbra-reviewer-version }}
       run: |
         set -euo pipefail
+        # umbra-reviewer is source-available (All Rights Reserved) and not on PyPI;
+        # install from the source repo by tag.
+        REPO="git+https://github.com/bkd-dotcom/umbra-reviewer"
         if [ -n "${IN_VERSION:-}" ]; then
           case "$IN_VERSION" in *[!0-9.a-zA-Z_-]*) echo "::error::bad version"; exit 1 ;; esac
-          pip install "umbra-reviewer==$IN_VERSION"
+          pip install "umbra-reviewer @ ${REPO}@v${IN_VERSION}"
         else
-          pip install umbra-reviewer
+          pip install "umbra-reviewer @ ${REPO}@v0.1.0"
         fi
 
     - name: Compute the PR diff
