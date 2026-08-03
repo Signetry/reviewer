@@ -64,7 +64,7 @@ jobs:
 
 ```bash
 # source-available (All Rights Reserved); not on PyPI — install from source
-pip install "umbra-reviewer @ git+https://github.com/bkd-dotcom/umbra-reviewer@v0.1.0"
+pip install "umbra-reviewer @ git+https://github.com/bkd-dotcom/umbra-reviewer@v0.1.1"
 
 git diff origin/main...HEAD | umbra-reviewer review --repo owner/name --pr 12 \
   --required-check success --comment-out comment.md

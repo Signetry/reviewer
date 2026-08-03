@@ -2,6 +2,17 @@
 
 Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semver.org/).
 
+## [0.1.1] — 2026-08-03
+
+### Changed — source-available distribution (no PyPI)
+
+- umbra-reviewer is **source-available** (All Rights Reserved) and is **not
+  published to PyPI**. Install from source:
+  `pip install "umbra-reviewer @ git+https://github.com/bkd-dotcom/umbra-reviewer@v0.1.1"`.
+- `action.yml` installs from the git source by tag (the `umbra-reviewer-version`
+  input is a git tag); README + `release.yml` updated to match (no PyPI publish).
+  No functional change from `0.1.0`.
+
 ## [0.1.0] — 2026-07-29
 
 ### Added

@@ -1,6 +1,6 @@
 [project]
 name = "umbra-reviewer"
-version = "0.1.0"
+version = "0.1.1"
 description = "An advisory PR reviewer that surfaces architecture + security issues, cross-verifies them against deterministic gates, and recommends whether a change is safe to merge — never merging on its own judgement."
 readme = "README.md"
 requires-python = ">=3.11"
