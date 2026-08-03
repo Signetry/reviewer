@@ -14,7 +14,11 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      # Only full semver tags (e.g. v0.1.1) cut a release. The moving major tag
+      # `v1` is repointed on each release and must NOT trigger this workflow
+      # (its name never matches the pyproject version, which would fail the
+      # tag/version check).
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: read
