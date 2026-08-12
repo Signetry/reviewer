@@ -9,7 +9,7 @@ still applies).
 ## Reporting
 
 Open a private security advisory on this repository, or use the umbrella contact:
-<https://github.com/bkd-dotcom/umbra-umbrella>. Do not open a public issue for an
+<https://github.com/Signetry/signetry>. Do not open a public issue for an
 unpatched vulnerability.
 
 ## Design guarantees
