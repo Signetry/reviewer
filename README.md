@@ -8,10 +8,10 @@
 
 **An advisory PR reviewer that finds architecture + security issues, cross-verifies them against deterministic gates, and tells you whether a change is safe to merge — without ever merging on its own judgement.**
 
-Part of the [Umbra platform](https://github.com/bkd-dotcom/umbra-umbrella).
+Part of the [Umbra platform](https://github.com/Signetry/signetry).
 
 [![Source-available](https://img.shields.io/badge/source-available-informational.svg)](CLA.md)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome%20(CLA)-brightgreen.svg)](https://github.com/bkd-dotcom/umbra-umbrella/issues/10)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome%20(CLA)-brightgreen.svg)](https://github.com/Signetry/signetry/issues/10)
 
 </div>
 
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - uses: bkd-dotcom/umbra-reviewer@v1
+      - uses: Signetry/reviewer@v1
         with:
           required-check: "Umbra Admission"   # cross-verify your merge gate (optional)
           protected-paths: "infra/**,src/auth/**"
@@ -64,7 +64,7 @@ jobs:
 
 ```bash
 # source-available (All Rights Reserved); not on PyPI — install from source
-pip install "umbra-reviewer @ git+https://github.com/bkd-dotcom/umbra-reviewer@v0.1.1"
+pip install "umbra-reviewer @ git+https://github.com/Signetry/reviewer@v0.1.1"
 
 git diff origin/main...HEAD | umbra-reviewer review --repo owner/name --pr 12 \
   --required-check success --comment-out comment.md
@@ -73,12 +73,12 @@ git diff origin/main...HEAD | umbra-reviewer review --repo owner/name --pr 12 \
 
 ## Pairs with the rest of Umbra
 
-- [`umbra-action`](https://github.com/bkd-dotcom/umbra-action) is the **hard gate** (the required check + signed receipt). `umbra-reviewer` is the **advisory layer** on top; point `required-check` at the Umbra Admission check to cross-verify.
-- [`umbra-core`](https://github.com/bkd-dotcom/umbra-core) is the governance kernel.
+- [`umbra-action`](https://github.com/Signetry/action) is the **hard gate** (the required check + signed receipt). `umbra-reviewer` is the **advisory layer** on top; point `required-check` at the Umbra Admission check to cross-verify.
+- [`umbra-core`](https://github.com/Signetry/core) is the governance kernel.
 
 ## Contributing
 
-**Source-available, PRs welcome** (not open source; All Rights Reserved). Contribute under the [CLA](CLA.md) — you're **credited** ([CONTRIBUTORS.md](CONTRIBUTORS.md)) but gain no ownership or right to use/sell it. Good first task: add a deterministic PR-diff check (`umbra_reviewer/checks.py`) with a test. Start at the [good-first-issues board](https://github.com/bkd-dotcom/umbra-umbrella/issues/10) and [CONTRIBUTING.md](CONTRIBUTING.md).
+**Source-available, PRs welcome** (not open source; All Rights Reserved). Contribute under the [CLA](CLA.md) — you're **credited** ([CONTRIBUTORS.md](CONTRIBUTORS.md)) but gain no ownership or right to use/sell it. Good first task: add a deterministic PR-diff check (`umbra_reviewer/checks.py`) with a test. Start at the [good-first-issues board](https://github.com/Signetry/signetry/issues/10) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

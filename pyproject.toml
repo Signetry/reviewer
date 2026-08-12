@@ -20,9 +20,9 @@ classifiers = [
 dependencies = []  # deterministic core is stdlib-only; no runtime deps.
 
 [project.urls]
-Homepage = "https://github.com/bkd-dotcom/umbra-reviewer"
-Repository = "https://github.com/bkd-dotcom/umbra-reviewer"
-Umbrella = "https://github.com/bkd-dotcom/umbra-umbrella"
+Homepage = "https://github.com/Signetry/reviewer"
+Repository = "https://github.com/Signetry/reviewer"
+Umbrella = "https://github.com/Signetry/signetry"
 
 [project.scripts]
 umbra-reviewer = "umbra_reviewer.cli:main"

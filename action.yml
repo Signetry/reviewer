@@ -60,7 +60,7 @@ runs:
         set -euo pipefail
         # umbra-reviewer is source-available (All Rights Reserved) and not on PyPI;
         # install from the source repo by tag.
-        REPO="git+https://github.com/bkd-dotcom/umbra-reviewer"
+        REPO="git+https://github.com/Signetry/reviewer"
         if [ -n "${IN_VERSION:-}" ]; then
           case "$IN_VERSION" in *[!0-9.a-zA-Z_-]*) echo "::error::bad version"; exit 1 ;; esac
           pip install "umbra-reviewer @ ${REPO}@v${IN_VERSION}"
