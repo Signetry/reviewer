@@ -1,4 +1,4 @@
-name: "Umbra Reviewer"
+name: "Signetry Reviewer"
 description: "Advisory PR review: surfaces architecture + security issues, cross-verifies against deterministic gates, and recommends safe / needs-human / block. Never merges on its own judgement."
 author: "Binay Dalai"
 branding:
@@ -7,7 +7,7 @@ branding:
 
 inputs:
   required-check:
-    description: "Name of the repo's required status check to cross-verify (e.g. 'Umbra Admission'). Blank skips the check lookup."
+    description: "Name of the repo's required status check to cross-verify (e.g. 'Signetry Admission'). Blank skips the check lookup."
     required: false
     default: ""
   protected-paths:
@@ -26,8 +26,8 @@ inputs:
     description: "Opt in to auto-merge on a SAFE verdict. OFF by default. Even when true, auto-merge only fires when the deterministic gates are green — never on the reviewer's judgement alone."
     required: false
     default: "false"
-  umbra-reviewer-version:
-    description: "Version tag of umbra-reviewer to install from source (e.g. '0.1.0'). Blank installs the pinned default. umbra-reviewer is source-available (All Rights Reserved) and installed from its source repo, not PyPI."
+  signetry-reviewer-version:
+    description: "Version tag of signetry-reviewer to install from source (e.g. '0.1.0'). Blank installs the pinned default. signetry-reviewer is source-available (All Rights Reserved) and installed from its source repo, not PyPI."
     required: false
     default: ""
   python-version:
@@ -52,20 +52,20 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: Install umbra-reviewer
+    - name: Install signetry-reviewer
       shell: bash
       env:
-        IN_VERSION: ${{ inputs.umbra-reviewer-version }}
+        IN_VERSION: ${{ inputs.signetry-reviewer-version }}
       run: |
         set -euo pipefail
-        # umbra-reviewer is source-available (All Rights Reserved) and not on PyPI;
+        # signetry-reviewer is source-available (All Rights Reserved) and not on PyPI;
         # install from the source repo by tag.
         REPO="git+https://github.com/Signetry/reviewer"
         if [ -n "${IN_VERSION:-}" ]; then
           case "$IN_VERSION" in *[!0-9.a-zA-Z_-]*) echo "::error::bad version"; exit 1 ;; esac
-          pip install "umbra-reviewer @ ${REPO}@v${IN_VERSION}"
+          pip install "signetry-reviewer @ ${REPO}@v${IN_VERSION}"
         else
-          pip install "umbra-reviewer @ ${REPO}@v0.1.1"
+          pip install "signetry-reviewer @ ${REPO}@v0.1.1"
         fi
 
     - name: Compute the PR diff
@@ -78,7 +78,7 @@ runs:
         set -euo pipefail
         git fetch --no-tags origin "$BASE_SHA" "$HEAD_SHA" 2>/dev/null || {
           echo "::error::Cannot fetch base/head. Set 'fetch-depth: 0' on actions/checkout."; exit 1; }
-        OUT="${RUNNER_TEMP:-/tmp}/umbra-reviewer"
+        OUT="${RUNNER_TEMP:-/tmp}/signetry-reviewer"
         mkdir -p "$OUT"
         git diff "$BASE_SHA" "$HEAD_SHA" > "$OUT/pr.diff"
         echo "OUT=$OUT" >> "$GITHUB_ENV"
@@ -119,12 +119,12 @@ runs:
         PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
         set -uo pipefail
-        OUT="${OUT:-${RUNNER_TEMP:-/tmp}/umbra-reviewer}"
+        OUT="${OUT:-${RUNNER_TEMP:-/tmp}/signetry-reviewer}"
         mkdir -p "$OUT"
         # Fail-closed: assume block until the reviewer actually completes and
         # overwrites RC with its own exit code. A crash here leaves RC=1.
         echo "RC=1" >> "$GITHUB_ENV"
-        umbra-reviewer review \
+        signetry-reviewer review \
           --diff "$OUT/pr.diff" \
           --repo "$GITHUB_REPOSITORY" \
           --pr "$PR_NUMBER" \
@@ -145,9 +145,9 @@ runs:
           const fs = require('fs');
           const path = require('path');
           const out = process.env.OUT || '';
-          let body = 'Umbra Reviewer: no review was produced.';
+          let body = 'Signetry Reviewer: no review was produced.';
           try { body = fs.readFileSync(path.join(out, 'comment.md'), 'utf8'); } catch (e) {}
-          const marker = '<!-- umbra-reviewer -->';
+          const marker = '<!-- signetry-reviewer -->';
           body = marker + '\n' + body;
           const { owner, repo } = context.repo;
           const issue_number = context.issue.number;
@@ -182,10 +182,10 @@ runs:
       run: |
         # Fail-closed: if the review step didn't succeed, or RC is non-zero, fail.
         if [ "${REVIEW_OUTCOME}" != "success" ]; then
-          echo "::error::Umbra Reviewer did not run to completion (step outcome: ${REVIEW_OUTCOME}). Failing closed."
+          echo "::error::Signetry Reviewer did not run to completion (step outcome: ${REVIEW_OUTCOME}). Failing closed."
           exit 1
         fi
         if [ "${RC:-1}" != "0" ]; then
-          echo "::error::Umbra Reviewer verdict is '${VERDICT:-unknown}'. See the PR comment."
+          echo "::error::Signetry Reviewer verdict is '${VERDICT:-unknown}'. See the PR comment."
           exit 1
         fi

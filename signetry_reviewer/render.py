@@ -18,7 +18,7 @@ _SEV_EMOJI = {
 def render_comment(review: Review) -> str:
     g = review.gates
     lines: list[str] = []
-    lines.append(f"## Umbra Reviewer — {_VERDICT_BADGE.get(review.verdict, review.verdict.value)}")
+    lines.append(f"## Signetry Reviewer — {_VERDICT_BADGE.get(review.verdict, review.verdict.value)}")
     lines.append("")
     lines.append(f"_{review.verdict_reason}_")
     lines.append("")

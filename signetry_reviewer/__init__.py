@@ -1,4 +1,4 @@
-"""umbra-reviewer — an advisory PR reviewer that surfaces architecture + security
+"""signetry-reviewer — an advisory PR reviewer that surfaces architecture + security
 issues, cross-verifies them against deterministic gates, and recommends whether a
 change is safe to merge, needs a human, or should be blocked.
 

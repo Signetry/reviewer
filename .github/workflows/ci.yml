@@ -14,5 +14,5 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
-      - run: ruff check umbra_reviewer/ tests/
+      - run: ruff check signetry_reviewer/ tests/
       - run: pytest -q
