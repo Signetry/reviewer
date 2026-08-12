@@ -1,6 +1,6 @@
-"""``umbra-reviewer`` CLI / GitHub Action entrypoint.
+"""``signetry-reviewer`` CLI / GitHub Action entrypoint.
 
-    umbra-reviewer review --diff pr.diff --repo owner/name --pr 12 \
+    signetry-reviewer review --diff pr.diff --repo owner/name --pr 12 \
         --required-check success --comment-out comment.md
 
 Reads a unified diff (from --diff FILE, or stdin), runs the advisory review,
@@ -42,7 +42,7 @@ def _write_outputs(path: str | None, verdict: str, worst: str, blocking: int, au
 def cmd_review(args: argparse.Namespace) -> int:
     diff = _read_diff(args)
     if not diff.strip():
-        print("umbra-reviewer: empty diff (nothing to review)", file=sys.stderr)
+        print("signetry-reviewer: empty diff (nothing to review)", file=sys.stderr)
         # Always emit outputs so a downstream gate never reads a stale/empty value.
         _write_outputs(args.github_output, "empty_diff", "info", 0, False)
         return 0
@@ -87,7 +87,7 @@ def cmd_review(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="umbra-reviewer", description="Advisory PR reviewer with a deterministic merge-safety gate.")
+    p = argparse.ArgumentParser(prog="signetry-reviewer", description="Advisory PR reviewer with a deterministic merge-safety gate.")
     sub = p.add_subparsers(dest="command", required=True)
 
     r = sub.add_parser("review", help="Review a unified diff and emit findings + a merge-safety verdict.")

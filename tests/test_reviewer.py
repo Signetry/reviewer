@@ -6,8 +6,8 @@ verdict never merges on its own; a blocking finding or a failed gate always bloc
 """
 from __future__ import annotations
 
-from umbra_reviewer import eligible_for_auto_merge, render_comment, review_diff
-from umbra_reviewer.model import Category, Finding, Severity, Verdict
+from signetry_reviewer import eligible_for_auto_merge, render_comment, review_diff
+from signetry_reviewer.model import Category, Finding, Severity, Verdict
 
 
 def _diff(path: str, added: list[str]) -> str:
@@ -167,7 +167,7 @@ def test_extra_finding_cannot_smuggle_deterministic_source():
 def test_comment_states_advisory_and_gates():
     r = review_diff(_diff("src/util.py", ["    return 1"]), repo="a/b", pr_number=7, required_check="success")
     md = render_comment(r)
-    assert "Umbra Reviewer" in md
+    assert "Signetry Reviewer" in md
     assert "Deterministic gates (the authority)" in md
     assert "advisory" in md.lower()
     assert "never merges on its own judgement" in md.lower()

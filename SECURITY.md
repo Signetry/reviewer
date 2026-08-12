@@ -1,6 +1,6 @@
 # Security policy
 
-umbra-reviewer is an **advisory** reviewer. It never merges on its own judgement:
+signetry-reviewer is an **advisory** reviewer. It never merges on its own judgement:
 merge authority is the deterministic gate (a required status check + a clean
 secret scan + no forbidden permission change) plus a human. Auto-merge is opt-in,
 off by default, and delegates to GitHub's native auto-merge (branch protection

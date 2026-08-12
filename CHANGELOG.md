@@ -1,6 +1,16 @@
-# Changelog — umbra-reviewer
+# Changelog — signetry-reviewer
 
 Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semver.org/).
+
+## [Unreleased]
+
+### Changed — rebranded to Signetry
+
+- Renamed the project from `umbra-reviewer` to `signetry-reviewer`: the Python
+  distribution (`[project].name`), the import package (`umbra_reviewer` →
+  `signetry_reviewer`), the CLI console command (`umbra-reviewer` →
+  `signetry-reviewer`), and all brand/prose references (`Umbra` → `Signetry`).
+- No backward-compatibility shims. Update install pins and imports accordingly.
 
 ## [0.1.1] — 2026-08-03
 

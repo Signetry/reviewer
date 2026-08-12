@@ -1,6 +1,6 @@
 <div align="center">
 
-# umbra-reviewer
+# signetry-reviewer
 
 > **Copyright (c) 2026 Binay Dalai. All rights reserved.**
 > This repository is strictly for viewing and contributing to the original project. You may not use, copy, modify, distribute, or commercialize this code for your own personal or commercial projects without explicit written permission. Only the original author retains the right to use and monetize this project.
@@ -8,7 +8,7 @@
 
 **An advisory PR reviewer that finds architecture + security issues, cross-verifies them against deterministic gates, and tells you whether a change is safe to merge — without ever merging on its own judgement.**
 
-Part of the [Umbra platform](https://github.com/Signetry/signetry).
+Part of the [Signetry platform](https://github.com/Signetry/signetry).
 
 [![Source-available](https://img.shields.io/badge/source-available-informational.svg)](CLA.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome%20(CLA)-brightgreen.svg)](https://github.com/Signetry/signetry/issues/10)
@@ -28,7 +28,7 @@ On every pull request, it:
 
 ## The safety model (why it won't rubber-stamp your repo)
 
-This mirrors Umbra's own principle: **an agent must not approve its own authority.**
+This mirrors Signetry's own principle: **an agent must not approve its own authority.**
 
 - The reviewer is **advisory**. Its findings never *grant* mergeability.
 - The **authority** to merge is the deterministic gate — a required status check + a clean secret scan + no forbidden permission change — plus a **human**.
@@ -41,7 +41,7 @@ This mirrors Umbra's own principle: **an agent must not approve its own authorit
 
 ```yaml
 # .github/workflows/review.yml
-name: Umbra Reviewer
+name: Signetry Reviewer
 on: { pull_request: {} }
 permissions:
   contents: read
@@ -55,7 +55,7 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: Signetry/reviewer@v1
         with:
-          required-check: "Umbra Admission"   # cross-verify your merge gate (optional)
+          required-check: "Signetry Admission"   # cross-verify your merge gate (optional)
           protected-paths: "infra/**,src/auth/**"
           # auto-merge: "true"                 # opt in; still needs green branch-protection checks
 ```
@@ -64,21 +64,21 @@ jobs:
 
 ```bash
 # source-available (All Rights Reserved); not on PyPI — install from source
-pip install "umbra-reviewer @ git+https://github.com/Signetry/reviewer@v0.1.1"
+pip install "signetry-reviewer @ git+https://github.com/Signetry/reviewer@v0.1.1"
 
-git diff origin/main...HEAD | umbra-reviewer review --repo owner/name --pr 12 \
+git diff origin/main...HEAD | signetry-reviewer review --repo owner/name --pr 12 \
   --required-check success --comment-out comment.md
 # exit 1 on a BLOCK verdict, so it gates CI. Add --fail-on-needs-human for a stricter gate.
 ```
 
-## Pairs with the rest of Umbra
+## Pairs with the rest of Signetry
 
-- [`umbra-action`](https://github.com/Signetry/action) is the **hard gate** (the required check + signed receipt). `umbra-reviewer` is the **advisory layer** on top; point `required-check` at the Umbra Admission check to cross-verify.
-- [`umbra-core`](https://github.com/Signetry/core) is the governance kernel.
+- [`signetry-action`](https://github.com/Signetry/action) is the **hard gate** (the required check + signed receipt). `signetry-reviewer` is the **advisory layer** on top; point `required-check` at the Signetry Admission check to cross-verify.
+- [`signetry-core`](https://github.com/Signetry/core) is the governance kernel.
 
 ## Contributing
 
-**Source-available, PRs welcome** (not open source; All Rights Reserved). Contribute under the [CLA](CLA.md) — you're **credited** ([CONTRIBUTORS.md](CONTRIBUTORS.md)) but gain no ownership or right to use/sell it. Good first task: add a deterministic PR-diff check (`umbra_reviewer/checks.py`) with a test. Start at the [good-first-issues board](https://github.com/Signetry/signetry/issues/10) and [CONTRIBUTING.md](CONTRIBUTING.md).
+**Source-available, PRs welcome** (not open source; All Rights Reserved). Contribute under the [CLA](CLA.md) — you're **credited** ([CONTRIBUTORS.md](CONTRIBUTORS.md)) but gain no ownership or right to use/sell it. Good first task: add a deterministic PR-diff check (`signetry_reviewer/checks.py`) with a test. Start at the [good-first-issues board](https://github.com/Signetry/signetry/issues/10) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

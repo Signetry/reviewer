@@ -1,7 +1,7 @@
 """The reviewer's result model — findings, the deterministic-gate report, and the
 merge-safety verdict.
 
-Design invariant (mirrors Umbra's own governance): the reviewer is ADVISORY. Its
+Design invariant (mirrors Signetry's own governance): the reviewer is ADVISORY. Its
 LLM/heuristic findings never *grant* merge authority. Authority to merge comes
 only from **deterministic gates** — the required status check, a clean secret
 scan, no forbidden permission/OIDC change — cross-verified here. A human (or a
@@ -81,7 +81,7 @@ class Verdict(str, Enum):
 class GateReport:
     """The DETERMINISTIC signals the verdict is actually built on — never the model.
 
-    ``required_check`` is the status of the repo's required check (e.g. the Umbra
+    ``required_check`` is the status of the repo's required check (e.g. the Signetry
     Admission action) as reported by the GitHub API. ``secret_scan_clean`` and
     ``no_forbidden_perms`` come from this package's deterministic scanners.
     """
