@@ -4,22 +4,20 @@ Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semve
 
 ## [Unreleased]
 
-### Changed — rebranded to Signetry
+### Changed — Signetry naming
 
-- Renamed the project from `umbra-reviewer` to `signetry-reviewer`: the Python
-  distribution (`[project].name`), the import package (`umbra_reviewer` →
-  `signetry_reviewer`), the CLI console command (`umbra-reviewer` →
-  `signetry-reviewer`), and all brand/prose references (`Umbra` → `Signetry`).
-- No backward-compatibility shims. Update install pins and imports accordingly.
+- The project is **`signetry-reviewer`**: the Python distribution
+  (`[project].name`), the import package (`signetry_reviewer`), the CLI console
+  command (`signetry-reviewer`), and all brand/prose references use **Signetry**.
 
 ## [0.1.1] — 2026-08-03
 
 ### Changed — source-available distribution (no PyPI)
 
-- umbra-reviewer is **source-available** (All Rights Reserved) and is **not
+- signetry-reviewer is **source-available** (All Rights Reserved) and is **not
   published to PyPI**. Install from source:
-  `pip install "umbra-reviewer @ git+https://github.com/Signetry/reviewer@v0.1.1"`.
-- `action.yml` installs from the git source by tag (the `umbra-reviewer-version`
+  `pip install "signetry-reviewer @ git+https://github.com/Signetry/reviewer@v0.1.2"`.
+- `action.yml` installs from the git source by tag (the `signetry-reviewer-version`
   input is a git tag); README + `release.yml` updated to match (no PyPI publish).
   No functional change from `0.1.0`.
 
@@ -41,4 +39,4 @@ Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semve
   verdict with green deterministic gates via GitHub-native `gh pr merge --auto`
   (branch protection still applies). Fails **closed** on a reviewer crash.
 - Ships a **GitHub Action** (posts/updates one PR comment, cross-verifies the
-  required check, optional guarded auto-merge) and a **CLI** (`umbra-reviewer review`).
+  required check, optional guarded auto-merge) and a **CLI** (`signetry-reviewer review`).
