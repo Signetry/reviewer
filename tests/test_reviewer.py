@@ -285,3 +285,71 @@ def test_review_json_serializable():
     r = review_diff(_diff("src/util.py", ["    return 1"]), repo="a/b", required_check="success")
     json.dumps(r.to_public())
     assert r.to_public()["advisory"] is True
+
+
+# --- insecure deserialization introduced in the diff (#2) -------------------
+
+
+def test_deserialization_sinks_flagged_across_languages():
+    for path, line in [
+        ("app.py", "    obj = pickle.loads(raw)"),
+        ("app.py", "    c = marshal.loads(b)"),
+        ("app.py", "    db = shelve.open(name)"),
+        ("app.py", "    cfg = yaml.load(text)"),
+        ("app.py", "    cfg = yaml.unsafe_load(text)"),
+        ("Dao.java", "    ObjectInputStream in = new ObjectInputStream(s);"),
+        ("Dao.java", "    Object o = in.readObject();"),
+        ("index.php", "$o = unserialize($_POST['d']);"),
+        ("app.rb", "  o = Marshal.load(data)"),
+        ("Repo.cs", "    var f = new BinaryFormatter();"),
+    ]:
+        r = review_diff(_diff(path, [line]), repo="a/b", required_check="success")
+        hits = [f for f in r.findings if f.id == "deser.introduced"]
+        assert len(hits) == 1, f"expected one finding for {line!r}, got {len(hits)}"
+
+
+def test_deserialization_is_advisory_never_blocking():
+    # A deser sink alone must not decide mergeability — whether the input is
+    # attacker-controlled cannot be read off a diff hunk.
+    r = review_diff(_diff("app.py", ["    obj = pickle.loads(raw)"]), repo="a/b", required_check="success")
+    f = next(x for x in r.findings if x.id == "deser.introduced")
+    assert f.blocking is False
+    assert r.verdict != Verdict.BLOCK
+
+
+def test_deserialization_safe_forms_not_flagged():
+    for line in [
+        "    cfg = yaml.load(text, Loader=yaml.SafeLoader)",
+        "    cfg = yaml.load(text, Loader=SafeLoader)",
+        "    cfg = yaml.safe_load(text)",
+        "    cfg = json.loads(text)",
+    ]:
+        r = review_diff(_diff("app.py", [line]), repo="a/b", required_check="success")
+        assert not [f for f in r.findings if f.id == "deser.introduced"], line
+
+
+def test_deserialization_ignores_comments():
+    for path, line in [
+        ("app.py", "    # never use pickle.loads( on untrusted input"),
+        ("Dao.java", "    // ObjectInputStream is unsafe here"),
+    ]:
+        r = review_diff(_diff(path, [line]), repo="a/b", required_check="success")
+        assert not [f for f in r.findings if f.id == "deser.introduced"], line
+
+
+def test_deserialization_added_lines_only():
+    # A REMOVED deser line is a fix, not a finding.
+    removal = ("--- a/app.py\n+++ b/app.py\n@@ -1,2 +1,1 @@\n unchanged\n"
+               "-    obj = pickle.loads(raw)\n")
+    r = review_diff(removal, repo="a/b", required_check="success")
+    assert not [f for f in r.findings if f.id == "deser.introduced"]
+
+
+def test_deserialization_lower_severity_in_test_paths():
+    prod = review_diff(_diff("app.py", ["    obj = pickle.loads(raw)"]), repo="a/b", required_check="success")
+    test = review_diff(_diff("tests/test_x.py", ["    obj = pickle.loads(raw)"]), repo="a/b", required_check="success")
+    p = next(f for f in prod.findings if f.id == "deser.introduced")
+    t = next(f for f in test.findings if f.id == "deser.introduced")
+    assert p.severity == Severity.HIGH
+    assert t.severity == Severity.MEDIUM
+    assert "test/fixture" in t.title

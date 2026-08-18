@@ -300,6 +300,76 @@ def scan_injection_surfaces(diff: str) -> list[Finding]:
     return findings
 
 
+# --- 3b. insecure deserialization introduced in the diff --------------------
+
+# (label, pattern). Each entry is a deserialization *sink* that executes attacker
+# data during decoding. Ordered per language; the first match on a line wins so one
+# added line yields at most one finding.
+_DESER_SINKS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("Python pickle", re.compile(r"\b(?:c?pickle|_pickle)\.loads?\s*\(")),
+    ("Python marshal", re.compile(r"\bmarshal\.loads?\s*\(")),
+    ("Python shelve", re.compile(r"\bshelve\.open\s*\(")),
+    # yaml.load is only unsafe without a safe Loader; yaml.unsafe_load always is.
+    ("Python yaml.load", re.compile(
+        r"\byaml\.unsafe_load\s*\("
+        r"|\byaml\.load\s*\((?![^)]*(?:Safe|CSafe|Base)Loader)"
+    )),
+    ("Java native deserialization", re.compile(
+        r"new\s+(?:[\w.]*\.)?ObjectInputStream\s*\(|\.readObject\s*\(\s*\)"
+    )),
+    ("PHP unserialize", re.compile(r"\bunserialize\s*\(")),
+    ("Ruby Marshal/YAML load", re.compile(r"\bMarshal\.load\s*\(|\bYAML\.load\s*\(")),
+    (".NET BinaryFormatter", re.compile(
+        r"\bnew\s+(?:BinaryFormatter|NetDataContractSerializer|LosFormatter|ObjectStateFormatter)\s*\("
+    )),
+)
+
+# Deserializing a value is not automatically a vulnerability — a fixture loading its
+# own artifact is routine. These paths are where that is the likely reading.
+_DESER_BENIGN_PATH = re.compile(r"(?:^|/)(?:tests?|fixtures?|testdata|examples?|benchmarks?)(?:/|$)")
+
+
+def scan_deserialization(diff: str) -> list[Finding]:
+    """Flag an insecure-deserialization sink introduced by the diff.
+
+    Advisory only. Deserialization is the shape of an RCE surface, but whether the
+    input is attacker-controlled cannot be decided from a diff hunk — so this adds
+    context for a reviewer and never decides mergeability, matching how
+    ``arch.dynamic_exec`` treats ``eval``/``exec``.
+
+    Added lines only, like every other scanner here: a PR is judged on what it
+    introduces, not on deserialization that already existed.
+    """
+    findings: list[Finding] = []
+    for file, ln, text in added_lines(diff):
+        t = text.strip()
+        # Skip comment-only lines across the languages this covers, so documenting a
+        # sink does not trip the rule (the mistake ci.pull_request_target made).
+        if t.startswith(("#", "//", "*", "/*")):
+            continue
+        for label, pat in _DESER_SINKS:
+            if not pat.search(t):
+                continue
+            in_test_path = bool(_DESER_BENIGN_PATH.search(file.lower()))
+            findings.append(Finding(
+                id="deser.introduced",
+                category=Category.SECURITY,
+                severity=Severity.MEDIUM if in_test_path else Severity.HIGH,
+                title=f"Insecure deserialization introduced ({label})"
+                      + (" in a test/fixture path" if in_test_path else ""),
+                detail=f"An added line deserializes data via {label}. On attacker-controlled "
+                       "input this is remote code execution during decoding, not merely a "
+                       "parsing bug. Confirm the input is trusted, or move to a safe format.",
+                file=file, line=ln,
+                remediation="Use a data-only format (JSON) for untrusted input; for YAML use "
+                            "yaml.safe_load / Loader=SafeLoader; if a binary format is "
+                            "required, sign and verify it before decoding.",
+                blocking=False,
+            ))
+            break  # one finding per added line
+    return findings
+
+
 # --- 4. architectural smells ------------------------------------------------
 
 
@@ -348,5 +418,6 @@ def run_all_deterministic(diff: str, *, protected_globs: tuple[str, ...] = ()) -
     findings += scan_ci_permissions(diff)
     findings += scan_dependency_skew(diff)
     findings += scan_injection_surfaces(diff)
+    findings += scan_deserialization(diff)
     findings += scan_architecture(diff, protected_globs=protected_globs)
     return findings
