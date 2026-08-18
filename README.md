@@ -64,7 +64,7 @@ jobs:
 
 ```bash
 # source-available (All Rights Reserved); not on PyPI — install from source
-pip install "signetry-reviewer @ git+https://github.com/Signetry/reviewer@v0.1.2"
+pip install "signetry-reviewer @ git+https://github.com/Signetry/reviewer@v0.2.0"
 
 git diff origin/main...HEAD | signetry-reviewer review --repo owner/name --pr 12 \
   --required-check success --comment-out comment.md

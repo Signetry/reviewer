@@ -4,6 +4,16 @@ Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semve
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.2.0] — 2026-08-18
+
+### Fixed — the pinned install default was stale
+
+- `action.yml` fell back to `@v0.1.1` even after v0.1.2 shipped, so a workflow that
+  did not set `signetry-reviewer-version` silently installed a release behind. Now
+  tracks this release.
+
 ### Fixed — CI checks no longer fire on YAML comments
 
 - `scan_ci_permissions` filtered nothing: every rule matched raw added text, so a
