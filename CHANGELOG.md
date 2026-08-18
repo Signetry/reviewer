@@ -4,7 +4,19 @@ Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semve
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added — insecure-deserialization check (`deser.introduced`)
+
+- Flags a deserialization sink introduced by the diff, across Python (`pickle`,
+  `marshal`, `shelve`, `yaml.load` without a safe Loader, `yaml.unsafe_load`), Java
+  (`ObjectInputStream` / `readObject`), PHP (`unserialize`), Ruby (`Marshal.load` /
+  `YAML.load`) and .NET (`BinaryFormatter` and friends).
+- **Advisory, never blocking.** Whether the input is attacker-controlled cannot be
+  read off a diff hunk, so this adds reviewer context rather than deciding
+  mergeability — matching how `arch.dynamic_exec` treats `eval`/`exec`.
+- Added lines only, so a *removed* sink (i.e. a fix) is not a finding.
+- Whole-line comments are skipped, and `yaml.load(..., Loader=SafeLoader)` /
+  `yaml.safe_load` / `json.loads` are not flagged. Sinks in test/fixture paths are
+  reported at MEDIUM rather than HIGH.
 
 ## [0.2.0] — 2026-08-18
 
