@@ -50,7 +50,11 @@ def review_diff(
     # placeholder in a test/fixture file is surfaced but does not fail the gate.
     secret_clean = not any(f.id == "secret.introduced" and f.blocking for f in findings)
     perm_ok = not any(f.blocking and f.id.startswith("ci.") for f in findings)
-    dep_ok = not any(f.id == "supply.dependency_skew" for f in findings)
+    # Same rule as secret_scan_clean above: this gate keys off a *blocking* skew.
+    # A lockfile-only change is a review signal, not a merge blocker — audit-fix
+    # and Dependabot refreshes are exactly that shape, and a failed gate means
+    # verdict=BLOCK / "not mergeable until resolved", which would reject them all.
+    dep_ok = not any(f.id == "supply.dependency_skew" and f.blocking for f in findings)
     gates = GateReport(
         required_check=required_check,
         secret_scan_clean=secret_clean,

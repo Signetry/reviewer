@@ -19,6 +19,28 @@ Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semve
 - Found in the field: Signetry/core#92 was returned 🔴 **Block** on two comment
   lines explaining why that trigger is deliberately avoided.
 
+### Added — dependency-skew check (`supply.dependency_skew`)
+
+- Flags a lockfile that changed without its sibling manifest, across npm/yarn/pnpm/
+  bun, uv/poetry/Pipenv, Cargo, Go, Composer and Bundler. Matching is
+  per-directory, so a monorepo's `packages/a/package-lock.json` is not satisfied by
+  `packages/b/package.json`.
+- Advisory (non-blocking) by design: `npm audit fix`, `cargo update` and Dependabot
+  all legitimately produce lockfile-only changes, and a failed gate means
+  `verdict=BLOCK` / "not mergeable", which would reject every one of them. It is
+  MEDIUM severity, so it still **withholds auto-merge** — a lockfile-substitution
+  PR cannot auto-merge on a green verdict.
+
+### Fixed — the `dependency_skew_ok` gate was dead, then would have over-blocked
+
+- `supply.dependency_skew` was referenced by the gate report, the verdict logic and
+  the rendered comment, but **no scanner ever produced it** — so the "Dependency
+  skew ✅ ok" row was meaningless in every review to date.
+- The gate also ignored the `blocking` flag, unlike `secret_scan_clean` and
+  `no_forbidden_perm_change`. It now keys off a *blocking* skew, matching them;
+  without this, implementing the check above would have hard-blocked every
+  Dependabot PR.
+
 ### Changed — Signetry naming
 
 - The project is **`signetry-reviewer`**: the Python distribution
