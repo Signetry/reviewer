@@ -121,6 +121,18 @@ def scan_secrets(diff: str) -> list[Finding]:
 
 _WORKFLOW_RE = re.compile(r"(^|/)\.github/workflows/.*\.ya?ml$")
 
+# `pull_request_target` as an actual trigger: either the mapping key
+#   pull_request_target:
+# or an entry in an inline sequence
+#   on: [push, pull_request_target]
+_PR_TARGET_RE = re.compile(
+    r"(?i)"
+    r"^pull_request_target\s*:"                      # mapping key
+    r"|^on\s*:\s*pull_request_target\b"              # single scalar trigger
+    r"|^on\s*:\s*\[[^]]*\bpull_request_target\b"     # inline sequence
+    r"|^-\s*pull_request_target\s*$"                 # block sequence item
+)
+
 
 def scan_ci_permissions(diff: str) -> list[Finding]:
     findings: list[Finding] = []
@@ -128,6 +140,14 @@ def scan_ci_permissions(diff: str) -> list[Finding]:
         if not _WORKFLOW_RE.search(file):
             continue
         t = text.strip()
+        # A whole-line YAML comment is prose, not configuration. Every rule below
+        # matches raw added text, so without this a workflow that *documents* a
+        # risk — "we deliberately do NOT use pull_request_target" — trips the very
+        # rule that exists to catch it. Inline trailing comments are deliberately
+        # not stripped: `#` is legal inside a quoted scalar, so removing it by
+        # regex would risk hiding real configuration.
+        if t.startswith("#"):
+            continue
         # Escalated permissions.
         if re.search(r"(?i)permissions:\s*write-all", t):
             findings.append(Finding(
@@ -145,8 +165,11 @@ def scan_ci_permissions(diff: str) -> list[Finding]:
                 file=file, line=ln, remediation="Confirm this is a release/publish job and the federated trust policy is scoped to this repo.",
                 blocking=False,
             ))
-        # Untrusted checkout of PR head in a privileged trigger.
-        if re.search(r"(?i)pull_request_target", t):
+        # Untrusted checkout of PR head in a privileged trigger. Match the trigger
+        # *key* (`pull_request_target:`) or an inline `on: [...]` list entry, not
+        # any mention of the string — a remediation note or a job/step name that
+        # merely refers to the trigger is not a use of it.
+        if _PR_TARGET_RE.search(t):
             findings.append(Finding(
                 id="ci.pull_request_target", category=Category.SECURITY, severity=Severity.HIGH,
                 title="Workflow uses pull_request_target",

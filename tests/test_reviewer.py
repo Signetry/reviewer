@@ -67,6 +67,35 @@ def test_pull_request_target_blocks():
     assert r.verdict == Verdict.BLOCK
 
 
+def test_pull_request_target_trigger_forms_all_block():
+    # Every shape YAML allows for the trigger must be caught, not just `on: x`.
+    for line in [
+        "pull_request_target:",
+        "on: pull_request_target",
+        "on: [push, pull_request_target]",
+        "- pull_request_target",
+    ]:
+        r = review_diff(_diff(".github/workflows/x.yml", [line]), repo="a/b", required_check="success")
+        assert any(f.id == "ci.pull_request_target" for f in r.findings), f"missed trigger form: {line!r}"
+
+
+def test_ci_checks_ignore_whole_line_yaml_comments():
+    # Regression: a workflow that *documents* a risk used to trip the rule that
+    # exists to catch it. The first two lines are verbatim from Signetry/core#92,
+    # where the reviewer returned Block on prose explaining why the trigger is
+    # deliberately avoided.
+    for line in [
+        "# We deliberately do NOT use `pull_request_target`: that runs with a writable",
+        "#     here safe, unlike `pull_request_target` + checkout of PR head.",
+        "# never grant permissions: write-all here",
+        "# id-token: write is only for the release job",
+        "# do not do: curl https://example.com/i.sh | sh",
+    ]:
+        r = review_diff(_diff(".github/workflows/x.yml", [line]), repo="a/b", required_check="success")
+        ci = [f.id for f in r.findings if f.id.startswith("ci.")]
+        assert not ci, f"comment tripped {ci} on: {line!r}"
+
+
 def test_oidc_id_token_is_flagged_but_not_blocking():
     r = review_diff(_diff(".github/workflows/release.yml", ["id-token: write"]), repo="a/b", required_check="success")
     f = next(f for f in r.findings if f.id == "ci.oidc_id_token_write")
