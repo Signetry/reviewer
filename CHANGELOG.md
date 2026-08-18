@@ -4,6 +4,21 @@ Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semve
 
 ## [Unreleased]
 
+### Fixed — CI checks no longer fire on YAML comments
+
+- `scan_ci_permissions` filtered nothing: every rule matched raw added text, so a
+  workflow that **documented** a risk in a comment tripped the rule meant to
+  catch it. Whole-line YAML comments (`#…`) are now skipped. Inline trailing
+  comments are deliberately still scanned — `#` is legal inside a quoted scalar,
+  so stripping it by regex could hide real configuration.
+- `ci.pull_request_target` matched the bare string anywhere in a workflow file.
+  It now matches the trigger itself in every form YAML permits: the mapping key
+  (`pull_request_target:`), a scalar (`on: pull_request_target`), an inline
+  sequence (`on: [push, pull_request_target]`), and a block sequence item
+  (`- pull_request_target`).
+- Found in the field: Signetry/core#92 was returned 🔴 **Block** on two comment
+  lines explaining why that trigger is deliberately avoided.
+
 ### Changed — Signetry naming
 
 - The project is **`signetry-reviewer`**: the Python distribution
