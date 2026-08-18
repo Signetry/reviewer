@@ -203,6 +203,72 @@ def scan_ci_permissions(diff: str) -> list[Finding]:
     return findings
 
 
+# --- 2b. dependency skew: a lockfile moved without its manifest -------------
+
+# lockfile basename (lowercased) -> the manifest(s) that should move with it.
+_LOCK_MANIFESTS: dict[str, tuple[str, ...]] = {
+    "package-lock.json": ("package.json",),
+    "npm-shrinkwrap.json": ("package.json",),
+    "yarn.lock": ("package.json",),
+    "pnpm-lock.yaml": ("package.json",),
+    "bun.lockb": ("package.json",),
+    "uv.lock": ("pyproject.toml",),
+    "poetry.lock": ("pyproject.toml",),
+    "pipfile.lock": ("Pipfile",),
+    "cargo.lock": ("Cargo.toml",),
+    "go.sum": ("go.mod",),
+    "composer.lock": ("composer.json",),
+    "gemfile.lock": ("Gemfile",),
+}
+
+
+def scan_dependency_skew(diff: str) -> list[Finding]:
+    """Flag a lockfile that changed without its sibling manifest.
+
+    Resolved dependency versions moving with no declared intent is the shape of a
+    dependency-substitution attack, and also of a careless hand-edit. It is NOT
+    inherently wrong — ``npm audit fix``, ``cargo update`` and Dependabot all do
+    it legitimately — so this is advisory (non-blocking) and exists to put a human
+    on the diff, not to reject it.
+    """
+    import posixpath
+
+    findings: list[Finding] = []
+    files = changed_files(diff)
+    # Compare case-insensitively: Cargo.lock/Gemfile.lock/Pipfile.lock are
+    # capitalised, and case can differ between a checkout and a diff header.
+    changed_lower = {f.lower() for f in files}
+    for f in files:
+        base = posixpath.basename(f).lower()
+        manifests = _LOCK_MANIFESTS.get(base)
+        if not manifests:
+            continue
+        # Only the manifest in the SAME directory counts, so a monorepo's
+        # packages/a/package-lock.json is not satisfied by packages/b/package.json.
+        d = posixpath.dirname(f)
+        siblings = {(posixpath.join(d, m) if d else m).lower() for m in manifests}
+        if changed_lower & siblings:
+            continue
+        expected = " or ".join(f"`{m}`" for m in manifests)
+        findings.append(Finding(
+            id="supply.dependency_skew", category=Category.SUPPLY_CHAIN, severity=Severity.MEDIUM,
+            title=f"Lockfile changed without its manifest: {f}",
+            detail=(
+                f"`{f}` changed but {expected} did not. Resolved dependency versions "
+                "moved with no corresponding change in declared intent — the shape of a "
+                "dependency-substitution attack, and of a hand-edited lockfile. Routine "
+                "for audit-fix/Dependabot refreshes, which is why this is advisory."
+            ),
+            file=f,
+            remediation=(
+                "Confirm the version moves are intended and come from the registry you "
+                f"expect; if a dependency was added or bumped, update {expected} too."
+            ),
+            blocking=False,
+        ))
+    return findings
+
+
 # --- 3. prompt-injection surfaces in instruction files ----------------------
 
 _INSTRUCTION_FILES = ("readme", "agents.md", "claude.md", ".cursorrules", "contributing", "copilot-instructions")
@@ -280,6 +346,7 @@ def run_all_deterministic(diff: str, *, protected_globs: tuple[str, ...] = ()) -
     findings: list[Finding] = []
     findings += scan_secrets(diff)
     findings += scan_ci_permissions(diff)
+    findings += scan_dependency_skew(diff)
     findings += scan_injection_surfaces(diff)
     findings += scan_architecture(diff, protected_globs=protected_globs)
     return findings
