@@ -65,7 +65,7 @@ runs:
           case "$IN_VERSION" in *[!0-9.a-zA-Z_-]*) echo "::error::bad version"; exit 1 ;; esac
           pip install "signetry-reviewer @ ${REPO}@v${IN_VERSION}"
         else
-          pip install "signetry-reviewer @ ${REPO}@v0.1.1"
+          pip install "signetry-reviewer @ ${REPO}@v0.2.0"
         fi
 
     - name: Compute the PR diff
