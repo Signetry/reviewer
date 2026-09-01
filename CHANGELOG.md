@@ -4,6 +4,24 @@ Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semve
 
 ## [Unreleased]
 
+### Changed — Signetry is now open core; this repo is Apache-2.0
+
+- An [Apache-2.0](LICENSE) **LICENSE** file is now present, replacing the previous
+  "All Rights Reserved" terms, as part of Signetry's
+  [open-core model](https://github.com/Signetry/signetry/blob/main/LICENSING.md). The
+  engine ([`Signetry/core`](https://github.com/Signetry/core)) is source-available under
+  BUSL-1.1 and converts to Apache-2.0 on 2030-08-31.
+- **The reviewer is advisory by construction** — it never merges and never gates — so
+  there is no reason to restrict who may run it. `pyproject.toml` declares
+  `license = "Apache-2.0"` and the OSI Apache classifier, replacing
+  `Proprietary — All Rights Reserved`.
+- The all-rights-reserved framing is gone from `README.md`, `CONTRIBUTING.md`,
+  `CLA.md`, `CONTRIBUTORS.md`, `action.yml`, the release workflow's notes, and the CLA
+  workflow's PR comment.
+- **The CLA is kept**, and its fallback licence grant is now **non-exclusive** so a
+  contributor never loses the right to use their own contribution. See
+  [CLA.md](CLA.md) §2–3.
+
 ### Added — insecure-deserialization check (`deser.introduced`)
 
 - Flags a deserialization sink introduced by the diff, across Python (`pickle`,

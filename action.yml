@@ -27,7 +27,7 @@ inputs:
     required: false
     default: "false"
   signetry-reviewer-version:
-    description: "Version tag of signetry-reviewer to install from source (e.g. '0.1.0'). Blank installs the pinned default. signetry-reviewer is source-available (All Rights Reserved) and installed from its source repo, not PyPI."
+    description: "Version tag of signetry-reviewer to install from source (e.g. '0.1.0'). Blank installs the pinned default. signetry-reviewer is Apache-2.0 and installed from its source repo, not PyPI."
     required: false
     default: ""
   python-version:
@@ -58,7 +58,7 @@ runs:
         IN_VERSION: ${{ inputs.signetry-reviewer-version }}
       run: |
         set -euo pipefail
-        # signetry-reviewer is source-available (All Rights Reserved) and not on PyPI;
+        # signetry-reviewer is Apache-2.0 and not published on PyPI;
         # install from the source repo by tag.
         REPO="git+https://github.com/Signetry/reviewer"
         if [ -n "${IN_VERSION:-}" ]; then
