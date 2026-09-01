@@ -2,15 +2,15 @@
 
 # signetry-reviewer
 
-> **Copyright (c) 2026 Binay Dalai. All rights reserved.**
-> This repository is strictly for viewing and contributing to the original project. You may not use, copy, modify, distribute, or commercialize this code for your own personal or commercial projects without explicit written permission. Only the original author retains the right to use and monetize this project.
+> **[Apache-2.0](LICENSE)** — use it, fork it, run it in your own CI, ship it
+> commercially. No permission needed.
 
 
 **An advisory PR reviewer that finds architecture + security issues, cross-verifies them against deterministic gates, and tells you whether a change is safe to merge — without ever merging on its own judgement.**
 
 Part of the [Signetry platform](https://github.com/Signetry/signetry).
 
-[![Source-available](https://img.shields.io/badge/source-available-informational.svg)](CLA.md)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome%20(CLA)-brightgreen.svg)](https://github.com/Signetry/signetry/issues/10)
 
 </div>
@@ -63,7 +63,7 @@ jobs:
 ## Use it (CLI)
 
 ```bash
-# source-available (All Rights Reserved); not on PyPI — install from source
+# Apache-2.0; not published on PyPI — install from source
 pip install "signetry-reviewer @ git+https://github.com/Signetry/reviewer@v0.2.0"
 
 git diff origin/main...HEAD | signetry-reviewer review --repo owner/name --pr 12 \
@@ -78,8 +78,16 @@ git diff origin/main...HEAD | signetry-reviewer review --repo owner/name --pr 12
 
 ## Contributing
 
-**Source-available, PRs welcome** (not open source; All Rights Reserved). Contribute under the [CLA](CLA.md) — you're **credited** ([CONTRIBUTORS.md](CONTRIBUTORS.md)) but gain no ownership or right to use/sell it. Good first task: add a deterministic PR-diff check (`signetry_reviewer/checks.py`) with a test. Start at the [good-first-issues board](https://github.com/Signetry/signetry/issues/10) and [CONTRIBUTING.md](CONTRIBUTING.md).
+**Apache-2.0, PRs welcome.** Contribute under the [CLA](CLA.md) — it lets code move across Signetry's open-core licence line without chasing every past contributor for permission, and it takes nothing from you: you keep the same Apache-2.0 rights as everyone else, plus a credit in [CONTRIBUTORS.md](CONTRIBUTORS.md). Good first task: add a deterministic PR-diff check (`signetry_reviewer/checks.py`) with a test. Start at the [good-first-issues board](https://github.com/Signetry/signetry/issues/10) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-**Copyright (c) 2026 Binay Dalai. All rights reserved.** This code is not open source. You may not use, copy, modify, distribute, or commercialize it for your own personal or commercial purposes without explicit written permission from the author, who alone retains the right to use and monetize this project. See [CONTRIBUTING.md](CONTRIBUTING.md).
+**[Apache-2.0](LICENSE).** Copyright (c) 2026 Binay Dalai.
+
+This repository is part of Signetry's [open-core model](https://github.com/Signetry/signetry/blob/main/LICENSING.md):
+the whole integration surface is Apache-2.0, and the engine
+([`signetry-core`](https://github.com/Signetry/core)) is source-available under BUSL-1.1,
+converting to Apache-2.0 on **2030-08-31**.
+
+The reviewer is **advisory by construction** — it never merges and never gates — so
+there is no reason to restrict who may run it. Fork it, embed it, ship it.
