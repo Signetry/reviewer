@@ -2,7 +2,7 @@
 
 Follows [Keep a Changelog](https://keepachangelog.com/) / [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [0.3.0] — 2026-09-01
 
 ### Changed — Signetry is now open core; this repo is Apache-2.0
 
